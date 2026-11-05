@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff3e0">
+<meta name="robots" content="noindex">
+<!-- 前端文件都在 v1/ 里：这里只做跳转，别把游戏内容放在根目录 -->
+<meta http-equiv="refresh" content="0; url=./v1/">
+<!-- canonical 原本指向原作者站点；自己部署时换成自己的域名 -->
+<title>合成老辈子 · 正在前往 v1</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(#fff8ee, #ffe7c6);
+    color: #6b5136;
+    font: 16px/1.7 "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    text-align: center;
+  }
+  a { color: #f4623a; font-weight: 700; }
+</style>
+<script>
+  /* 0 秒 meta 跳转 + 这里兜底：file:// 直接双击打开、或个别浏览器不执行 meta 时也能跳 */
+  location.replace('./v1/' + location.search + location.hash);
+</script>
+</head>
+<body>
+  <p>正在打开《合成老辈子》…<br>
+     没有自动跳转的话，点 <a href="./v1/">这里</a>。</p>
+</body>
+</html>
