@@ -1,0 +1,10 @@
+{
+  "name": "sens-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SENS LAB — 网页版 FPS 鼠标灵敏度检测器（跟枪 / 甩枪 / 微调）",
+  "scripts": {
+    "test": "node --test test/",
+    "serve": "node scripts/serve.mjs"
+  }
+}
