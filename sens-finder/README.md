@@ -79,6 +79,8 @@ cm360      = 914.4 / (DPI × yaw × sens)
 | Apex Legends | 0.022 | 与 CS2 同基准 |
 | Overwatch 2 | 0.0066 | 守望先锋 2 |
 
+> yaw 基准与换算公式参考 [Sens Converter — Why yaw matters](https://sensconverter.org/guides/why-yaw-matters/)。
+
 测试中每个鼠标计数对应的视角旋转为：
 
 ```

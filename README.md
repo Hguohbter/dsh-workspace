@@ -6,6 +6,7 @@ DSH（DeepSeek Harness）的日常实验与项目根目录，位于 D 盘以节�
 
 | 路径 | 用途 |
 | --- | --- |
+| `sens-finder/` | 网页版 FPS 灵敏度检测器（跟枪 / 甩枪 / 微调） |
 | `scripts/` | 可复用脚本 |
 | `scratch/` | 一次性试验（不提交） |
 
