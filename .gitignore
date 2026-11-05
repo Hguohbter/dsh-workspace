@@ -24,3 +24,8 @@ Thumbs.db
 .env
 .env.*
 *.pem
+id_ed25519*
+.id_rsa*
+
+# 独立仓库克隆（各自维护，不并入本仓库）
+/bignaiwa/
