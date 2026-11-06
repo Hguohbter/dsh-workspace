@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#080c12">
+<meta name="theme-color" content="#8ec7e8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="轻量网页版地铁跑酷，主角是同学。">
-<title>同学跑酷</title>
+<meta name="description" content="白天街道 + 学校的轻量网页跑酷。">
+<title>胖虎快跑</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
 
   <div id="hud">
     <div class="hud-left">
-      <div class="score" id="score">0</div>
+      <div class="chip-score"><span class="score" id="score">0</span></div>
       <div class="sub"><span class="coin-dot"></span><span id="coin">0</span></div>
     </div>
     <div class="hud-right">
@@ -26,11 +26,14 @@
     </div>
   </div>
 
+  <div id="powerups" class="powerups"></div>
+
   <div id="start" class="screen">
     <div class="card">
       <div class="avatar-wrap"><img id="startFace" class="face" alt=""></div>
-      <h1>同学跑酷</h1>
-      <p class="who"><b id="startName">同学</b> 正在放学路上狂奔…</p>
+      <h1 id="title">胖虎快跑</h1>
+      <p class="who"><b id="startName">胖虎</b> 正从学校一路狂奔回家…</p>
+      <div id="charRow" class="char-row"></div>
       <button id="playBtn" class="btn" type="button">开始跑</button>
       <button id="boardBtn" class="btn ghost" type="button">在线排行榜</button>
       <p class="tips">左右滑动换道 · 上滑跳跃 · 下滑翻滚</p>
@@ -41,7 +44,7 @@
     <div class="card">
       <div class="avatar-wrap"><img id="overFace" class="face" alt=""></div>
       <h2>被逮住了</h2>
-      <p class="who"><b id="overName">同学</b> 撞上了</p>
+      <p class="who"><b id="overName">胖虎</b> 撞上了</p>
       <div class="stats">
         <div><b id="finalScore">0</b><span>分</span></div>
         <div><b id="finalCoin">0</b><span>币</span></div>

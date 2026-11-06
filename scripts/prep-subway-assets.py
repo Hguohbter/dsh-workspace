@@ -2,12 +2,16 @@
 """把白底人像照片处理成透明底的游戏素材（不用分割模型，纯连通域抠白底）。
 
 用法：
-    python scripts/prep-subway-assets.py <front.jpg> <back.jpg>
+    python scripts/prep-subway-assets.py <角色id> <front.jpg> <back.jpg>
 
-输出 docs/subway/assets/ 下：
-    student-front.webp  正面全身（菜单用）
-    student-back.webp   背面全身（游戏内奔跑用）
-    student-face.webp   头部方形特写（头像 / 结算页）
+例：
+    python scripts/prep-subway-assets.py panghu front.jpg back.jpg
+
+输出 docs/subway/assets/ 下（<id> 换成人名拼音）：
+    <id>-front.webp  正面全身（原始素材）
+    <id>-back.webp   背面全身（原始素材）
+    <id>-face.webp   头部方形特写（头像 / 结算页）
+    <id>-head.webp   后脑勺（游戏内骨骼小人的脑袋）
 """
 import sys
 from pathlib import Path
@@ -128,12 +132,19 @@ def save_head(back, name, height=240):
     cx = (x0 + x1) / 2
     side = max(int((x1 - x0) * 1.06), int(h * 0.17))
     left = max(0, min(w - side, int(cx - side / 2)))
-    head = back.crop((left, 0, left + side, min(h, int(h * 0.185))))
+    # 0.155 左右刚好切在发际/衣领之间，再往下会把领子带进来（头会显得陷进肩膀）
+    head = back.crop((left, 0, left + side, min(h, int(h * 0.155))))
     scale = height / head.size[1]
     head = head.resize((max(1, round(head.size[0] * scale)), height), Image.LANCZOS)
     p = OUT / name
     head.save(p, "WEBP", quality=90, method=6)
-    print(f"{name:20s} {head.size[0]}x{head.size[1]}  {p.stat().st_size/1024:.0f} KB")
+
+    # 头顶贴图不一定是居中的，算出质量中心的横向偏移供游戏里微调
+    a = np.asarray(head.getchannel("A")).astype(float) / 255.0
+    hh, ww = a.shape
+    mass = (a * np.arange(ww)[None, :]).sum() / a.sum()
+    print(f"{name:22s} {head.size[0]}x{head.size[1]}  {p.stat().st_size/1024:.0f} KB"
+          f"  头心偏移={(mass - ww / 2) / ww * 100:+.1f}%")
     return head
 
 
@@ -162,15 +173,16 @@ def sample_colors(img):
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print(__doc__)
         raise SystemExit(1)
-    front = cutout(sys.argv[1])
-    back = cutout(sys.argv[2])
-    save_body(front, "student-front.webp", 820)
-    save_body(back, "student-back.webp", 820)
-    save_face(front, "student-face.webp", 320)
-    save_head(back, "student-head.webp", 240)
+    cid = sys.argv[1]
+    front = cutout(sys.argv[2])
+    back = cutout(sys.argv[3])
+    save_body(front, f"{cid}-front.webp", 820)
+    save_body(back, f"{cid}-back.webp", 820)
+    save_face(front, f"{cid}-face.webp", 320)
+    save_head(back, f"{cid}-head.webp", 240)
     sample_colors(back)
 
 

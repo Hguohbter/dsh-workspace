@@ -44,7 +44,11 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(115% 78% at 50% 42%, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, .55) 100%);
+  background: linear-gradient(180deg,
+    rgba(8, 16, 26, .22) 0%,
+    rgba(8, 16, 26, 0) 20%,
+    rgba(8, 16, 26, 0) 66%,
+    rgba(8, 16, 26, .32) 100%);
 }
 
 #game {
@@ -66,11 +70,20 @@ body {
 }
 
 .hud-left .score {
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: .5px;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .55);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+
+.chip-score {
+  display: inline-block;
+  padding: 5px 12px 7px;
+  border-radius: 14px;
+  background: rgba(10, 22, 34, .32);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .hud-left .sub {
@@ -95,8 +108,9 @@ body {
 
 .hud-right .best {
   font-size: 13px;
-  color: rgba(238, 242, 248, .62);
+  color: rgba(255, 255, 255, .82);
   margin-bottom: 8px;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .5);
 }
 
 .hud-right .best b { color: #fff; }
@@ -272,6 +286,63 @@ h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: 1px; }
 .board-list .nm { flex: 1; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .board-list .sc { color: var(--gold); font-weight: 800; font-variant-numeric: tabular-nums; }
 .board-list li.empty { justify-content: center; color: rgba(255, 255, 255, .4); font-size: 13px; }
+
+/* ---------- 道具状态 ---------- */
+.powerups {
+  position: absolute;
+  top: calc(58px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.chip {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: #10202b;
+  background: #ffd75e;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .28);
+}
+
+.chip.magnet { background: #ff6f91; color: #fff; }
+.chip.shield { background: #54d6ff; }
+.chip.boost { background: #ffd75e; }
+
+/* ---------- 角色选择（多角色时自动出现） ---------- */
+.char-row {
+  display: none;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: -4px 0 14px;
+}
+
+.char-pick {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .08);
+  cursor: pointer;
+}
+
+.char-pick.on {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255, 207, 77, .25);
+}
+
+.char-pick img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .tips {
   margin: 14px 0 0;
