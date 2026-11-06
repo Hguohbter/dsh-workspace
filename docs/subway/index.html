@@ -32,6 +32,7 @@
       <h1>同学跑酷</h1>
       <p class="who"><b id="startName">同学</b> 正在放学路上狂奔…</p>
       <button id="playBtn" class="btn" type="button">开始跑</button>
+      <button id="boardBtn" class="btn ghost" type="button">在线排行榜</button>
       <p class="tips">左右滑动换道 · 上滑跳跃 · 下滑翻滚</p>
     </div>
   </div>
@@ -46,7 +47,24 @@
         <div><b id="finalCoin">0</b><span>币</span></div>
       </div>
       <p class="bestline">最高 <b id="overBest">0</b></p>
+      <div class="submit-row">
+        <input id="nameInput" class="name-input" maxlength="8" placeholder="你的名字" autocomplete="off">
+        <button id="submitBtn" class="btn small" type="button">上传成绩</button>
+      </div>
+      <p class="hint" id="submitHint"></p>
       <button id="retryBtn" class="btn" type="button">再来一局</button>
+    </div>
+  </div>
+
+  <div id="board" class="screen hidden">
+    <div class="card">
+      <h2>在线排行榜</h2>
+      <p class="who">近 12 小时 · 每人取最高分</p>
+      <ol id="boardList" class="board-list"><li class="empty">加载中…</li></ol>
+      <div class="row">
+        <button id="boardRefresh" class="btn ghost small" type="button">刷新</button>
+        <button id="boardClose" class="btn small" type="button">返回</button>
+      </div>
     </div>
   </div>
 

@@ -11,7 +11,8 @@
     asset: {
       front: 'assets/student-front.webp',
       back: 'assets/student-back.webp',
-      face: 'assets/student-face.webp'
+      face: 'assets/student-face.webp',
+      head: 'assets/student-head.webp'
     },
     laneW: 1.0,
     roadHalf: 1.9,
@@ -23,7 +24,16 @@
     gravity: 23,
     rollTime: 0.55,
     speedMin: 8,
-    speedMax: 18
+    speedMax: 18,
+    // 在线排行榜：ntfy.sh 的公共 topic，零注册零配置；12 小时自动过期
+    lb: { base: 'https://ntfy.sh', topic: 'subway-class-run-9f3k' }
+  };
+
+  // 骨骼小人的配色（取自背面照采样）
+  var COL = {
+    jacket: '#8a3350', jacketDark: '#5f2036',
+    pants: '#2f3240', pantsDark: '#23262f',
+    shoe: '#1b2025', skin: '#c9968f', pack: '#15181c'
   };
 
   /* ================= 画布与视图 ================= */
@@ -53,14 +63,14 @@
   function py(y, z) { return horizon + ((CFG.camH - y) * F) / z; }
 
   /* ================= 素材 ================= */
-  var img = { front: new Image(), back: new Image(), face: new Image() };
+  var img = { face: new Image(), head: new Image() };
   var loadedCount = 0;
 
   function onAsset() {
     loadedCount++;
-    if (loadedCount >= 3) ready();
+    if (loadedCount >= 2) ready();
   }
-  ['front', 'back', 'face'].forEach(function (k) {
+  ['face', 'head'].forEach(function (k) {
     img[k].onload = onAsset;
     img[k].onerror = onAsset;
     img[k].src = CFG.asset[k];
@@ -84,7 +94,10 @@
     shake: 0,
     objs: [],
     parts: [],
-    nextZ: 0
+    nextSpawnAt: 40,
+    lastScore: 0,
+    lastCoins: 0,
+    submitted: false
   };
 
   var player = { lane: 0, x: 0, y: 0, vy: 0, roll: 0, lean: 0 };
@@ -97,7 +110,9 @@
     game.shake = 0;
     game.objs = [];
     game.parts = [];
-    game.nextZ = 40;   // 开局先给 4 秒左右的空跑道，别一上来就撞
+    game.nextSpawnAt = 40;   // 开局先给 4 秒左右的空跑道，别一上来就撞
+    game.submitted = false;
+    rig.phase = 0;
     player.lane = 0;
     player.x = 0;
     player.y = 0;
@@ -194,12 +209,13 @@
     if (!last) last = now;
     var dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    update(dt);
+    if (!game.freeze) update(dt);
     render();
   }
 
   function update(dt) {
     game.t += dt;
+    rig.phase += dt * (4.0 + game.speed * 0.55);
     if (game.shake > 0) game.shake = Math.max(0, game.shake - dt * 2.4);
 
     if (game.state === 'menu') {
@@ -238,10 +254,11 @@
       if (game.objs[j].dead) game.objs.splice(j, 1);
     }
 
-    // 生成
-    while (game.nextZ < CFG.zFar) {
-      spawnPattern(game.nextZ);
-      game.nextZ += Math.max(10, game.speed * 0.8) - Math.random() * 2;
+    // 生成：nextSpawnAt 存的是“绝对里程”，再换算成相对相机的 z
+    // （旧写法直接把 z 累加，跑出 90 之后就不再生成，后面就空了）
+    while (game.nextSpawnAt - game.dist < CFG.zFar) {
+      spawnPattern(game.nextSpawnAt - game.dist);
+      game.nextSpawnAt += Math.max(10, game.speed * 0.8) - Math.random() * 2;
     }
 
     // 粒子
@@ -292,6 +309,14 @@
     document.getElementById('overBest').textContent = game.best;
     document.getElementById('over').classList.remove('hidden');
     document.getElementById('best').textContent = game.best;
+
+    // 结算页的上传入口
+    game.lastScore = score;
+    game.lastCoins = game.coins;
+    game.submitted = false;
+    document.getElementById('nameInput').value = localStorage.getItem('subway.name') || CFG.name;
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitHint').textContent = '';
   }
 
   function scoreNow() {
@@ -589,11 +614,44 @@
     ctx.stroke();
   }
 
+  /* ---------- 角色：照片脑袋 + 程序化骨骼（跑/跳/滚都有动作） ---------- */
+  var rig = { phase: 0 };
+
+  function poseRunner() {
+    var ph = rig.phase;
+    var a = Math.sin(ph), b = Math.sin(ph + Math.PI);
+    var p = {
+      hipL: 0.10 * a, kneeL: 1.45 * Math.max(0, a),
+      hipR: 0.10 * b, kneeR: 1.45 * Math.max(0, b),
+      armL: -0.55 * a, armR: -0.55 * b,
+      pitch: 0.05, bob: -Math.abs(Math.cos(ph)) * 0.02
+    };
+    if (player.y > 0.02) {
+      // 空中：收腿、抬手
+      p.hipL = 0.5; p.kneeL = 1.5;
+      p.hipR = -0.1; p.kneeR = 0.5;
+      p.armL = -1.4; p.armR = -1.4;
+      p.pitch = player.vy > 0 ? -0.06 : 0.1;
+      p.bob = 0;
+    }
+    if (player.roll > 0) {
+      // 翻滚：缩成一团，头往下压
+      p.hipL = 0.42; p.kneeL = 1.55;
+      p.hipR = 0.30; p.kneeR = 1.65;
+      p.armL = -0.95; p.armR = -0.95;
+      p.pitch = 0.5;
+      p.bob = 0;
+    }
+    return p;
+  }
+
   function drawPlayer() {
     var s = F / CFG.playerZ;
     var x = px(player.x, CFG.playerZ);
     var feet = py(player.y, CFG.playerZ);
-    var ground = py(0, CFG.playerZ);
+    var groundPx = py(0, CFG.playerZ);
+    var p = poseRunner();
+    var squash = player.roll > 0 ? 0.72 : 1;
 
     // 影子
     var sh = Math.max(0.18, 1 - player.y * 0.55);
@@ -601,33 +659,22 @@
     ctx.globalAlpha = 0.42 * sh;
     ctx.fillStyle = '#000';
     ctx.beginPath();
-    ctx.ellipse(px(player.x, CFG.playerZ), ground, 0.32 * s, 0.1 * s, 0, 0, 6.283);
+    ctx.ellipse(x, groundPx, 0.34 * s, 0.1 * s, 0, 0, 6.283);
     ctx.fill();
     ctx.restore();
 
-    var rollK = player.roll > 0 ? 0.58 : 1;
-    var bob = game.state === 'play' ? Math.sin(game.t * 13) * 0.02 : Math.sin(game.t * 2) * 0.01;
-    var hh = CFG.playerH * s * rollK;
-    var ar = aspect('back', 0.45);
-    var ww = hh * ar;
-
     ctx.save();
-    ctx.translate(x, feet + bob * hh);
-    ctx.rotate(-player.lean * 0.2);
-    ctx.scale(1 + (1 - rollK) * 0.35, 1);
-    if (img.back.naturalWidth) {
-      ctx.drawImage(img.back, -ww / 2, -hh, ww, hh);
-    } else {
-      ctx.fillStyle = '#8a3a55';
-      ctx.fillRect(-ww / 2, -hh, ww, hh);
-    }
+    ctx.translate(x, feet + p.bob * s);
+    ctx.rotate(-player.lean * 0.22 + p.pitch * 0.3);
+    ctx.scale(1 + (1 - squash) * 0.5, squash);
+    drawSkeleton(s, p);
     ctx.restore();
 
-    // 落地/起跳的土
+    // 落地扬起的土
     if (player.y === 0 && game.state === 'play' && player.vy === 0 && Math.random() < 0.06) {
       game.parts.push({
         x: px(player.x, CFG.playerZ) + (Math.random() - 0.5) * 20,
-        y: ground,
+        y: groundPx,
         vx: (Math.random() - 0.5) * 40,
         vy: 20 + Math.random() * 30,
         life: 0.3, max: 0.3,
@@ -635,6 +682,142 @@
         size: 1.5 + Math.random() * 1.5
       });
     }
+  }
+
+  function drawSkeleton(u, p) {
+    var hipY = -0.84 * u;
+    var shoulderY = -1.32 * u;
+
+    // 远侧腿先画
+    drawLeg(u, 1, hipY, p.hipR, p.kneeR);
+    drawLeg(u, -1, hipY, p.hipL, p.kneeL);
+
+    // 躯干（校服外套）
+    var g = ctx.createLinearGradient(0, shoulderY, 0, hipY);
+    g.addColorStop(0, COL.jacket);
+    g.addColorStop(1, COL.jacketDark);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(-0.13 * u, hipY + 0.02 * u);
+    ctx.quadraticCurveTo(0, hipY + 0.07 * u, 0.13 * u, hipY + 0.02 * u);
+    ctx.lineTo(0.19 * u, shoulderY + 0.08 * u);
+    ctx.quadraticCurveTo(0, shoulderY - 0.02 * u, -0.19 * u, shoulderY + 0.08 * u);
+    ctx.closePath();
+    ctx.fill();
+
+    // 手臂
+    drawArm(u, 1, shoulderY + 0.04 * u, p.armR);
+    drawArm(u, -1, shoulderY + 0.04 * u, p.armL);
+
+    // 书包
+    rrect(-0.13 * u, shoulderY + 0.06 * u, 0.26 * u, 0.44 * u, 0.055 * u, COL.pack);
+    rrect(-0.09 * u, hipY - 0.28 * u, 0.18 * u, 0.15 * u, 0.03 * u, 'rgba(255,255,255,.05)');
+    // 肩带
+    ctx.strokeStyle = '#0b0d10';
+    ctx.lineWidth = 0.045 * u;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-0.125 * u, shoulderY + 0.02 * u);
+    ctx.lineTo(-0.15 * u, hipY - 0.32 * u);
+    ctx.moveTo(0.125 * u, shoulderY + 0.02 * u);
+    ctx.lineTo(0.15 * u, hipY - 0.32 * u);
+    ctx.stroke();
+
+    // 脑袋（照片：后脑勺 + 猫耳）
+    var hh = 0.56 * u;
+    var hw = hh * aspect('head', 0.92);
+    var hy = shoulderY - hh * 0.72;
+    if (img.head.naturalWidth) {
+      ctx.drawImage(img.head, -hw / 2, hy, hw, hh);
+    } else {
+      rrect(-hw / 2, hy, hw, hh, hw * 0.4, COL.pack);
+    }
+  }
+
+  // 带描边的肢体：先用深色粗线勾一圈，再用本色画，避免同色糊成一团
+  function limb(x1, y1, x2, y2, w, color) {
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0c0f14';
+    ctx.lineWidth = w + Math.max(2.2, w * 0.26);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+
+  function drawLeg(u, side, hipY, hipAng, kneeBend) {
+    var hx = side * 0.075 * u;
+    var a1 = side * hipAng;
+    var kx = hx + Math.sin(a1) * 0.44 * u;
+    var ky = hipY + Math.cos(a1) * 0.44 * u;
+
+    // 小腿朝镜头方向折，投影变短 → 视觉上就是脚抬起来了
+    var shinLen = 0.42 * u * (0.34 + 0.66 * Math.cos(kneeBend * 0.95));
+    var a2 = a1 + side * (0.10 + kneeBend * 0.30);
+    var fx = kx + Math.sin(a2) * shinLen;
+    var fy = ky + Math.cos(a2) * shinLen;
+
+    limb(kx, ky, fx, fy, 0.13 * u, COL.pantsDark);
+    limb(hx, hipY, kx, ky, 0.16 * u, COL.pants);
+
+    // 裤子侧边的酒红线
+    ctx.strokeStyle = COL.jacket;
+    ctx.lineWidth = 0.022 * u;
+    ctx.beginPath();
+    ctx.moveTo(hx + side * 0.07 * u, hipY + 0.02 * u);
+    ctx.lineTo(kx + side * 0.07 * u, ky);
+    ctx.lineTo(fx + side * 0.055 * u, fy);
+    ctx.stroke();
+
+    // 鞋
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(a2 * 0.5);
+    ctx.fillStyle = '#0c0f14';
+    ctx.beginPath();
+    ctx.ellipse(side * 0.02 * u, 0.015 * u, 0.122 * u, 0.07 * u, 0, 0, 6.283);
+    ctx.fill();
+    ctx.fillStyle = COL.shoe;
+    ctx.beginPath();
+    ctx.ellipse(side * 0.02 * u, 0.012 * u, 0.11 * u, 0.058 * u, 0, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawArm(u, side, shoulderY, swing) {
+    var sx = side * 0.155 * u;
+    var a1 = side * (0.16 + swing * 0.45);
+    var ex = sx + Math.sin(a1) * 0.28 * u;
+    var ey = shoulderY + Math.cos(a1) * 0.28 * u;
+    var fore = 0.26 * u * (0.72 + 0.28 * Math.cos(swing * 1.8));
+    var a2 = a1 + side * 0.22;
+    var hx = ex + Math.sin(a2) * fore;
+    var hy = ey + Math.cos(a2) * fore;
+
+    limb(sx, shoulderY, ex, ey, 0.125 * u, COL.jacket);
+    limb(ex, ey, hx, hy, 0.112 * u, COL.jacketDark);
+
+    ctx.fillStyle = COL.skin;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 0.055 * u, 0, 6.283);
+    ctx.fill();
+  }
+
+  function rrect(x, y, w, h, r, fill) {
+    var rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
   }
 
   function drawParts() {
@@ -647,6 +830,112 @@
     ctx.globalAlpha = 1;
   }
 
+  /* ================= 在线排行榜 ================= */
+  // 用 ntfy.sh 的公共 pub/sub 当免费 KV：发一条消息就是一行成绩，读回来按名字去重取最高。
+  // 零注册、零后端、CORS 全开；代价是消息 12 小时后过期、topic 是公开的（谁都能看能写）。
+  function lbURL(path) { return CFG.lb.base + '/' + CFG.lb.topic + path; }
+
+  function lbFetch() {
+    return fetch(lbURL('/json?poll=1&since=all&limit=300'), { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function (text) {
+        var out = [];
+        text.split('\n').forEach(function (line) {
+          if (!line) return;
+          try {
+            var m = JSON.parse(line);
+            if (m.event !== 'message') return;
+            var d = JSON.parse(m.message);
+            var name = String(d.n || '').trim().slice(0, 8);
+            var score = Math.floor(Number(d.s) || 0);
+            if (!name || score <= 0 || score > 200000) return;
+            out.push({ name: name, score: score, coins: Math.floor(Number(d.c) || 0) });
+          } catch (e) { /* 脏数据直接跳过 */ }
+        });
+        return out;
+      });
+  }
+
+  function lbBest(items) {
+    var best = {};
+    items.forEach(function (e) {
+      if (!best[e.name] || e.score > best[e.name].score) best[e.name] = e;
+    });
+    return Object.keys(best).map(function (k) { return best[k]; })
+      .sort(function (a, b) { return b.score - a.score; })
+      .slice(0, 20);
+  }
+
+  function lbSubmit(name, score, coins) {
+    var body = JSON.stringify({ n: name, s: score, c: coins, t: Date.now() });
+    return fetch(lbURL(''), {
+      method: 'POST',
+      body: body,
+      headers: { 'Content-Type': 'text/plain' }
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return true;
+    });
+  }
+
+  function renderBoard(items) {
+    var list = document.getElementById('boardList');
+    var rows = lbBest(items);
+    if (!rows.length) {
+      list.innerHTML = '<li class="empty">还没有人上榜，抢个第一</li>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function (r, i) {
+      html += '<li><span class="rank">' + (i + 1) + '</span><span class="nm"></span><span class="sc">' + r.score + '</span></li>';
+    });
+    list.innerHTML = html;
+    var cells = list.querySelectorAll('.nm');
+    rows.forEach(function (r, i) { if (cells[i]) cells[i].textContent = r.name; });
+  }
+
+  function loadBoard() {
+    var list = document.getElementById('boardList');
+    list.innerHTML = '<li class="empty">加载中…</li>';
+    lbFetch().then(renderBoard).catch(function () {
+      list.innerHTML = '<li class="empty">连不上排行榜，稍后再试</li>';
+    });
+  }
+
+  function openBoard() {
+    document.getElementById('board').classList.remove('hidden');
+    loadBoard();
+  }
+
+  function submitScore() {
+    if (game.submitted) return;
+    var input = document.getElementById('nameInput');
+    var hint = document.getElementById('submitHint');
+    var btn = document.getElementById('submitBtn');
+    var name = (input.value || '').trim().slice(0, 8);
+    if (!name) { hint.textContent = '先写个名字'; return; }
+    var now = Date.now();
+    if (now - Number(localStorage.getItem('subway.lbAt') || 0) < 20000) {
+      hint.textContent = '刚传过，歇 20 秒再传';
+      return;
+    }
+    btn.disabled = true;
+    hint.textContent = '上传中…';
+    localStorage.setItem('subway.name', name);
+    lbSubmit(name, game.lastScore, game.lastCoins).then(function () {
+      game.submitted = true;
+      localStorage.setItem('subway.lbAt', String(now));
+      hint.textContent = '已上榜';
+      loadBoard();
+    }).catch(function () {
+      btn.disabled = false;
+      hint.textContent = '上传失败，检查网络后重试';
+    });
+  }
+
   /* ================= 输入 ================= */
   var drag = null;
 
@@ -656,6 +945,7 @@
     document.getElementById('start').classList.add('hidden');
     document.getElementById('over').classList.add('hidden');
     document.getElementById('pause').classList.add('hidden');
+    document.getElementById('board').classList.add('hidden');
     last = 0;
     beep(660, 0.09, 'triangle', 0.05);
   }
@@ -780,6 +1070,23 @@
     // 手机上没有键盘，暂停层要能点一下继续
     document.getElementById('pause').addEventListener('click', function () { resume(); });
 
+    document.getElementById('boardBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      openBoard();
+    });
+    document.getElementById('boardClose').addEventListener('click', function (e) {
+      e.stopPropagation();
+      document.getElementById('board').classList.add('hidden');
+    });
+    document.getElementById('boardRefresh').addEventListener('click', function (e) {
+      e.stopPropagation();
+      loadBoard();
+    });
+    document.getElementById('submitBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      submitScore();
+    });
+
     // 竖屏/横屏都自适应
     resize();
     bindTouch();
@@ -796,5 +1103,5 @@
   }
 
   // 调试入口（自动化测试/控制台调参用，不影响游戏）
-  window.__subway = { game: game, player: player, start: startGame, CFG: CFG, resize: resize };
+  window.__subway = { game: game, player: player, start: startGame, CFG: CFG, resize: resize, lbBest: lbBest, rig: rig };
 })();

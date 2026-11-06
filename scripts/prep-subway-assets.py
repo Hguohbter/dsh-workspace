@@ -116,6 +116,51 @@ def save_face(front, name, size=320):
     print(f"{name:20s} {size}x{size}  {p.stat().st_size/1024:.0f} KB")
 
 
+def save_head(back, name, height=240):
+    """从背面图裁出“后脑勺”（头发+猫耳），给游戏内的骨骼小人当脑袋。"""
+    w, h = back.size
+    # 只用最上面 12% 找头发/耳朵的横向范围，避免把肩膀带进来
+    band = back.crop((0, 0, w, max(8, int(h * 0.12))))
+    bbox = band.getchannel("A").point(lambda v: 255 if v > 10 else 0).getbbox()
+    if not bbox:
+        bbox = (0, 0, w, max(8, int(h * 0.12)))
+    x0, _, x1, _ = bbox
+    cx = (x0 + x1) / 2
+    side = max(int((x1 - x0) * 1.06), int(h * 0.17))
+    left = max(0, min(w - side, int(cx - side / 2)))
+    head = back.crop((left, 0, left + side, min(h, int(h * 0.185))))
+    scale = height / head.size[1]
+    head = head.resize((max(1, round(head.size[0] * scale)), height), Image.LANCZOS)
+    p = OUT / name
+    head.save(p, "WEBP", quality=90, method=6)
+    print(f"{name:20s} {head.size[0]}x{head.size[1]}  {p.stat().st_size/1024:.0f} KB")
+    return head
+
+
+def sample_colors(img):
+    """从成品图取几个代表色，方便游戏里画同色系的四肢。"""
+    a = np.asarray(img).astype(float)
+    alpha = a[..., 3] / 255.0
+    h, w, _ = a.shape
+    spots = {
+        "jacket": (0.50, 0.36),
+        "pants": (0.46, 0.74),
+        "shoe": (0.42, 0.96),
+        "skin": (0.88, 0.55),
+    }
+    out = {}
+    for k, (rx, ry) in spots.items():
+        x, y = int(w * rx), int(h * ry)
+        patch = a[max(0, y - 4):y + 4, max(0, x - 4):x + 4, :3]
+        wa = alpha[max(0, y - 4):y + 4, max(0, x - 4):x + 4]
+        if wa.sum() < 1:
+            continue
+        rgb = (patch * wa[..., None]).sum(axis=(0, 1)) / wa.sum()
+        out[k] = "#%02x%02x%02x" % tuple(int(round(v)) for v in rgb)
+    print("采样色:", out)
+    return out
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -125,6 +170,8 @@ def main():
     save_body(front, "student-front.webp", 820)
     save_body(back, "student-back.webp", 820)
     save_face(front, "student-face.webp", 320)
+    save_head(back, "student-head.webp", 240)
+    sample_colors(back)
 
 
 if __name__ == "__main__":
