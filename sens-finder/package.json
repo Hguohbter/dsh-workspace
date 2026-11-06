@@ -5,6 +5,7 @@
   "description": "SENS LAB — 网页版 FPS 鼠标灵敏度检测器（跟枪 / 甩枪 / 微调）",
   "scripts": {
     "test": "node --test test/",
-    "serve": "node scripts/serve.mjs"
+    "serve": "node scripts/serve.mjs",
+    "publish-pages": "node scripts/publish-pages.mjs"
   }
 }

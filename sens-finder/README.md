@@ -134,6 +134,23 @@ sens-finder/
 └─ docs/                 截图
 ```
 
+## 部署到 GitHub Pages
+
+本仓库的 Pages 从 `main` 分支的 `docs/` 目录发布。源文件保持在 `sens-finder/`，部署产物由脚本同步到 `docs/sens-finder/`：
+
+```powershell
+cd D:\Dev\dsh-workspace\sens-finder
+node scripts/publish-pages.mjs
+# 然后提交并推送
+git add ..\docs\sens-finder
+git commit -m "site: publish sens-finder"
+git push origin main
+```
+
+发布地址：<https://hguohbter.github.io/dsh-workspace/sens-finder/>
+
+> 站点根路径目前仍指向原来的《合成老辈子》页面；本工具作为独立子路径发布，不会覆盖它。
+
 ## 验证
 
 ```powershell

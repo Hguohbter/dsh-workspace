@@ -8,6 +8,7 @@
 cd D:\Dev\dsh-workspace\sens-finder
 node --test test/          # 核心数学单测
 node scripts/serve.mjs     # http://127.0.0.1:4173
+node scripts/publish-pages.mjs  # 同步到 ../docs/sens-finder（Pages 发布）
 ```
 
 浏览器内自测：

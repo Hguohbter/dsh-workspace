@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="SENS LAB — 用跟枪、甩枪和微调测试，找到你的最佳鼠标灵敏度。" />
+    <title>SENS LAB · 灵敏度实验室</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070d18'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%233ee6ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%233ee6ff'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" id="brand-link" aria-label="SENS LAB 首页">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+          <span class="brand-text">
+            <strong>SENS<span>LAB</span></strong>
+            <small>灵敏度实验室</small>
+          </span>
+        </a>
+        <div class="topbar-right">
+          <span class="status-pill"><i></i>离线运行 · 原始输入</span>
+          <button class="icon-btn" id="sound-toggle" type="button" aria-pressed="true" title="开关音效">
+            <span class="sound-icon" aria-hidden="true">◖</span>
+            <span id="sound-label">音效开</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="screens">
+        <!-- ============================ SETUP ============================ -->
+        <section class="screen is-active" id="screen-setup">
+          <div class="setup-hero">
+            <div class="hero-copy">
+              <p class="eyebrow"><span></span> MOUSE SENSITIVITY CALIBRATOR</p>
+              <h1>把「手感」<br /><em>变成数据</em></h1>
+              <p class="hero-lede">
+                用跟枪、甩枪和微调三项测试，横向对比 7 档灵敏度。<br />
+                不靠玄学，找到真正适合你的那一档。
+              </p>
+              <ul class="hero-points">
+                <li><b>01</b> 同一套靶序，公平对比</li>
+                <li><b>02</b> 换算 cm/360，跨游戏通用</li>
+                <li><b>03</b> 曲线拟合，给出推荐区间</li>
+              </ul>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+              <div class="orbit orbit-a"></div>
+              <div class="orbit orbit-b"></div>
+              <div class="orbit orbit-c"></div>
+              <div class="hero-target">
+                <span class="target-ring"></span>
+                <span class="target-core"></span>
+              </div>
+              <div class="hero-crosshair">
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <div class="hero-readout">
+                <span>CM / 360°</span>
+                <strong id="hero-cm">40.8</strong>
+                <small>VALORANT · 0.400</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="setup-grid">
+            <form class="panel setup-form" id="setup-form" novalidate>
+              <div class="panel-heading">
+                <h2>测试设置</h2>
+                <span class="panel-note">全部在本机完成</span>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span class="field-label">游戏</span>
+                  <span class="select-wrap">
+                    <select id="game-select" name="game"></select>
+                  </span>
+                </label>
+
+                <label class="field">
+                  <span class="field-label">鼠标 DPI</span>
+                  <span class="dpi-row">
+                    <input id="dpi-input" name="dpi" type="number" inputmode="numeric" min="100" max="32000" step="50" value="800" />
+                    <span class="chip-row" id="dpi-chips">
+                      <button type="button" class="chip" data-dpi="400">400</button>
+                      <button type="button" class="chip" data-dpi="800">800</button>
+                      <button type="button" class="chip" data-dpi="1600">1600</button>
+                    </span>
+                  </span>
+                </label>
+
+                <label class="field">
+                  <span class="field-label">当前游戏内灵敏度 <small>选填</small></span>
+                  <input id="sens-input" name="sens" type="number" inputmode="decimal" min="0" max="100" step="0.001" placeholder="例如 0.4" />
+                  <span class="field-hint" id="sens-hint">填写后会自动围绕当前灵敏度生成测试范围</span>
+                </label>
+
+                <label class="field">
+                  <span class="field-label">测试范围</span>
+                  <span class="select-wrap">
+                    <select id="preset-select" name="preset">
+                      <option value="auto" selected>自动 · 围绕当前灵敏度（未填则均衡）</option>
+                      <option value="balanced">均衡 · 18–65 cm</option>
+                      <option value="low">低敏 / 手臂流 · 30–80 cm</option>
+                      <option value="high">高敏 / 手腕流 · 12–38 cm</option>
+                      <option value="broad">大范围 · 12–90 cm</option>
+                    </select>
+                  </span>
+                </label>
+              </div>
+
+              <details class="advanced">
+                <summary>手动指定 cm/360 范围</summary>
+                <div class="advanced-grid">
+                  <label class="field compact">
+                    <span class="field-label">最小值</span>
+                    <input id="min-input" type="number" min="6" max="140" step="0.5" placeholder="自动" />
+                  </label>
+                  <label class="field compact">
+                    <span class="field-label">最大值</span>
+                    <input id="max-input" type="number" min="6" max="140" step="0.5" placeholder="自动" />
+                  </label>
+                  <p class="advanced-hint">两项都填写才生效。数值越大 = 灵敏度越低。</p>
+                </div>
+              </details>
+
+              <fieldset class="field mode-field">
+                <legend class="field-label">测试模式</legend>
+                <div class="mode-cards" id="mode-cards">
+                  <label class="mode-card">
+                    <input type="radio" name="mode" value="quick" />
+                    <span class="mode-card-body">
+                      <strong>快速</strong>
+                      <small>5 档 · 不加热身</small>
+                      <em id="est-quick">≈ 2 分钟</em>
+                    </span>
+                  </label>
+                  <label class="mode-card">
+                    <input type="radio" name="mode" value="standard" checked />
+                    <span class="mode-card-body">
+                      <strong>标准</strong>
+                      <small>7 档 · 含热身</small>
+                      <em id="est-standard">≈ 3 分钟</em>
+                    </span>
+                  </label>
+                  <label class="mode-card">
+                    <input type="radio" name="mode" value="fine" />
+                    <span class="mode-card-body">
+                      <strong>精细</strong>
+                      <small>9 档 · 含热身</small>
+                      <em id="est-fine">≈ 4 分钟</em>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="field-grid two">
+                <label class="field">
+                  <span class="field-label">瞄准偏好</span>
+                  <span class="select-wrap">
+                    <select id="style-select" name="style"></select>
+                  </span>
+                </label>
+                <div class="field aesthetic">
+                  <span class="field-label">操作说明</span>
+                  <p>开始后鼠标会被锁定。按 <kbd>Esc</kbd> 随时暂停，测试数据不会丢。</p>
+                </div>
+              </div>
+
+              <p class="device-warning" id="device-warning" hidden>当前设备未检测到鼠标。灵敏度测试需要鼠标与 Pointer Lock，触屏设备只能浏览设置页。</p>
+              <p class="form-error" id="setup-error" role="alert" hidden></p>
+
+              <div class="start-row">
+                <button class="btn btn-primary btn-lg" id="start-btn" type="submit">
+                  <span>开始校准</span>
+                  <span class="btn-arrow" aria-hidden="true">→</span>
+                </button>
+                <div class="start-meta">
+                  <span id="estimate-label">标准模式 · 7 档 · 约 3 分钟</span>
+                  <span id="last-run" class="muted">还没有测试记录</span>
+                </div>
+              </div>
+            </form>
+
+            <aside class="setup-side">
+              <div class="panel preview-panel">
+                <div class="panel-heading">
+                  <h3>换算预览</h3>
+                  <span class="panel-note" id="preview-cm">40.8 cm / 360°</span>
+                </div>
+                <div class="preview-list" id="preview-table"></div>
+                <p class="preview-range" id="preview-range">测试范围 —</p>
+                <p class="preview-foot">
+                  基于 yaw 系数换算；cm/360 相同，手感就相同。
+                </p>
+              </div>
+
+              <div class="panel steps-panel">
+                <div class="panel-heading"><h3>三步测出结果</h3></div>
+                <ol class="steps">
+                  <li>
+                    <span class="step-dot"></span>
+                    <div><strong>跟枪 · 7 秒</strong><p>准星压住移动目标，测持续追踪能力。</p></div>
+                  </li>
+                  <li>
+                    <span class="step-dot"></span>
+                    <div><strong>甩枪 · 5 个目标</strong><p>快速点击随机出现的目标，测大范围定位。</p></div>
+                  </li>
+                  <li>
+                    <span class="step-dot"></span>
+                    <div><strong>微调 · 5 个目标</strong><p>把准星停在移动的小目标上，测精细控制。</p></div>
+                  </li>
+                </ol>
+                <p class="steps-foot">每档使用完全相同的靶序；顺序按中间→两侧交错，抵消学习效应。</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ============================ TEST ============================ -->
+        <section class="screen" id="screen-test">
+          <div class="test-hud">
+            <div class="hud-left">
+              <span class="hud-kicker">SENSITIVITY TEST</span>
+              <strong id="test-round-label">第 1 / 7 档</strong>
+              <span class="hud-sub" id="test-sens-label">40.0 cm/360 · VALORANT 0.286</span>
+            </div>
+            <div class="hud-center">
+              <div class="hud-stage-row">
+                <span class="stage-chip" id="test-mode-label">跟枪</span>
+                <span class="stage-timer" id="test-timer">7.0s</span>
+              </div>
+              <div class="hud-progress"><span id="test-progress"></span></div>
+            </div>
+            <div class="hud-right">
+              <div class="stage-pips" id="stage-pips">
+                <span data-stage="track"></span><span data-stage="flick"></span><span data-stage="micro"></span>
+              </div>
+              <div class="hud-actions">
+                <button class="btn btn-ghost btn-sm" id="pause-btn" type="button">暂停</button>
+                <button class="btn btn-ghost btn-sm danger" id="quit-btn" type="button">结束</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="arena-wrap" id="arena-wrap">
+            <canvas id="arena" aria-label="测试区域"></canvas>
+            <div class="arena-hint" id="test-hint">按住鼠标，让准星保持在目标上</div>
+            <div class="target-state" id="target-state" aria-hidden="true"><i></i><span>偏离</span></div>
+            <div class="arena-overlay is-hidden" id="arena-overlay">
+              <div class="overlay-card" id="overlay-card">
+                <span class="overlay-kicker" id="overlay-kicker">准备</span>
+                <h2 id="overlay-title">锁定鼠标</h2>
+                <p id="overlay-text">点击下方按钮开始，鼠标将被锁定在测试区域。</p>
+                <div class="overlay-actions" id="overlay-actions"></div>
+              </div>
+            </div>
+            <div class="lock-badge" id="lock-badge" hidden>鼠标已锁定 · Esc 暂停</div>
+          </div>
+
+          <div class="test-foot">
+            <div class="foot-metrics">
+              <span><small>本轮</small><b id="foot-round">1 / 7</b></span>
+              <span><small>模式</small><b id="foot-mode">标准</b></span>
+              <span><small>靶序种子</small><b id="foot-seed">—</b></span>
+            </div>
+            <p class="foot-note">数据只保存在本机浏览器。测试过程中请保持同样的坐姿与握鼠方式。</p>
+          </div>
+        </section>
+
+        <!-- ============================ RESULTS ============================ -->
+        <section class="screen" id="screen-results">
+          <div class="results-head">
+            <div>
+              <p class="eyebrow"><span></span> SESSION REPORT</p>
+              <h1>你的最佳灵敏度</h1>
+              <p class="results-sub" id="result-meta">—</p>
+            </div>
+            <div class="results-actions">
+              <button class="btn btn-ghost" id="setup-btn" type="button">调整设置</button>
+              <button class="btn btn-ghost" id="copy-btn" type="button">复制结论</button>
+              <button class="btn btn-ghost" id="export-btn" type="button">导出 JSON</button>
+              <button class="btn btn-primary" id="restart-btn" type="button">再测一次 →</button>
+            </div>
+          </div>
+
+          <div class="result-hero">
+            <div class="peak-card">
+              <span class="peak-label">推荐灵敏度</span>
+              <div class="peak-value"><strong id="result-peak">—</strong><span>cm / 360°</span></div>
+              <div class="peak-sub">
+                <span id="result-score">峰值评分 —</span>
+                <span class="confidence" id="result-confidence">置信度 —</span>
+              </div>
+              <div class="band-row">
+                <span>建议区间</span>
+                <b id="result-band">—</b>
+              </div>
+              <p class="peak-note" id="result-note"></p>
+            </div>
+            <div class="conversion-card">
+              <div class="panel-heading">
+                <h3>换算到你的游戏</h3>
+                <span class="panel-note" id="result-dpi">DPI 800</span>
+              </div>
+              <div class="sens-table" id="result-table"></div>
+              <p class="copy-hint">点击任意数值复制 · 括号内为区间</p>
+            </div>
+          </div>
+
+          <div class="results-grid">
+            <div class="panel chart-panel">
+              <div class="panel-heading">
+                <div>
+                  <h3>灵敏度 - 表现曲线</h3>
+                  <p class="panel-note">灰色点为每档实测，曲线为二次拟合</p>
+                </div>
+                <div class="chart-legend" id="chart-legend">
+                  <button type="button" class="legend-item is-active" data-series="combined"><i></i>综合</button>
+                  <button type="button" class="legend-item is-active" data-series="track"><i></i>跟枪</button>
+                  <button type="button" class="legend-item is-active" data-series="flick"><i></i>甩枪</button>
+                  <button type="button" class="legend-item is-active" data-series="micro"><i></i>微调</button>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="result-chart" aria-label="灵敏度与得分曲线图"></canvas>
+                <div class="chart-tooltip" id="chart-tooltip" hidden></div>
+              </div>
+            </div>
+
+            <div class="panel breakdown-panel">
+              <div class="panel-heading"><h3>分项最佳</h3></div>
+              <div id="result-modes" class="mode-best"></div>
+              <div class="panel-heading sub"><h3>本档构成</h3></div>
+              <div id="result-weights" class="weight-list"></div>
+            </div>
+          </div>
+
+          <div class="panel table-panel">
+            <div class="panel-heading">
+              <h3>全部测试数据</h3>
+              <span class="panel-note" id="result-count">—</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>顺序</th>
+                    <th>cm/360</th>
+                    <th>综合</th>
+                    <th>跟枪</th>
+                    <th>甩枪</th>
+                    <th>微调</th>
+                    <th>等级</th>
+                  </tr>
+                </thead>
+                <tbody id="round-table-body"></tbody>
+              </table>
+            </div>
+            <p class="table-note">* 综合得分按你的瞄准偏好加权；顺序为实际测试顺序，用于检查疲劳/学习效应。</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-foot">
+        <span>SENS LAB v1.0 · 本机离线运行，不上传任何数据</span>
+        <span>建议使用 Chrome / Edge，关闭鼠标加速以获得一致结果</span>
+      </footer>
+    </div>
+
+    <div id="boot-error" class="boot-error" hidden></div>
+    <script src="src/core.js"></script>
+    <script src="src/engine.js"></script>
+    <script src="src/app.js"></script>
+  </body>
+</html>
