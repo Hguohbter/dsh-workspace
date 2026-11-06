@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#080c12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="轻量网页版地铁跑酷，主角是同学。">
+<title>同学跑酷</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div class="hud-left">
+      <div class="score" id="score">0</div>
+      <div class="sub"><span class="coin-dot"></span><span id="coin">0</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="best">最高 <b id="best">0</b></div>
+      <button id="mute" class="mute" type="button" aria-label="音效开关">🔊</button>
+    </div>
+  </div>
+
+  <div id="start" class="screen">
+    <div class="card">
+      <div class="avatar-wrap"><img id="startFace" class="face" alt=""></div>
+      <h1>同学跑酷</h1>
+      <p class="who"><b id="startName">同学</b> 正在放学路上狂奔…</p>
+      <button id="playBtn" class="btn" type="button">开始跑</button>
+      <p class="tips">左右滑动换道 · 上滑跳跃 · 下滑翻滚</p>
+    </div>
+  </div>
+
+  <div id="over" class="screen hidden">
+    <div class="card">
+      <div class="avatar-wrap"><img id="overFace" class="face" alt=""></div>
+      <h2>被逮住了</h2>
+      <p class="who"><b id="overName">同学</b> 撞上了</p>
+      <div class="stats">
+        <div><b id="finalScore">0</b><span>分</span></div>
+        <div><b id="finalCoin">0</b><span>币</span></div>
+      </div>
+      <p class="bestline">最高 <b id="overBest">0</b></p>
+      <button id="retryBtn" class="btn" type="button">再来一局</button>
+    </div>
+  </div>
+
+  <div id="pause" class="screen hidden">
+    <div class="card small">
+      <h2>暂停</h2>
+      <p class="who">点一下继续跑</p>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
