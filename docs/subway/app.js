@@ -26,7 +26,7 @@
     speedMin: 8,
     speedMax: 18,
     // 在线排行榜：ntfy.sh 的公共 topic，零注册零配置；12 小时自动过期
-    lb: { base: 'https://ntfy.sh', topic: 'subway-class-run-9f3k' }
+    lb: { base: 'https://ntfy.sh', topic: 'subway-hero-2026-x7k2' }
   };
 
   // 骨骼小人的配色（取自背面照采样）
