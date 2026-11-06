@@ -1,6 +1,6 @@
 # dsh-workspace
 
-DSH（DeepSeek Harness）的日常实验与项目根目录，位于 D 盘以节省 C 盘空间。
+DSH（DeepSeek Harness）的日常实验与项目根目录
 
 ## 目录
 
