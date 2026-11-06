@@ -1095,11 +1095,11 @@
 
   function drawArm(u, side, shoulderY, swing) {
     var sx = side * 0.155 * u;
-    var a1 = side * (0.16 + swing * 0.45);
+    var a1 = side * (0.10 + swing * 0.5);
     var ex = sx + Math.sin(a1) * 0.28 * u;
     var ey = shoulderY + Math.cos(a1) * 0.28 * u;
-    var fore = 0.26 * u * (0.72 + 0.28 * Math.cos(swing * 1.8));
-    var a2 = a1 + side * 0.22;
+    var fore = 0.26 * u * (0.68 + 0.32 * Math.cos(swing * 1.8));
+    var a2 = a1 - side * 0.18;
     var hx = ex + Math.sin(a2) * fore;
     var hy = ey + Math.cos(a2) * fore;
 
