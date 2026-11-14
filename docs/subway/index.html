@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
-<meta name="theme-color" content="#1a0e1c">
+<meta name="theme-color" content="#8ec7e8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="description" content="夜市小吃街跑酷：三条跑道、摊位小吃、小电驴冲刺。">
+<meta name="description" content="白天街道 + 学校的轻量网页跑酷。">
 <title>胖虎快跑</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -15,134 +15,58 @@
 <div id="stage">
   <canvas id="game"></canvas>
 
-  <!-- ============ 游戏内 HUD ============ -->
-  <div id="hud" class="hud">
+  <div id="hud">
     <div class="hud-left">
-      <div class="chip-score"><span class="score" id="score">0</span><span class="unit">分</span></div>
-      <div class="lives" id="lives"></div>
+      <div class="chip-score"><span class="score" id="score">0</span></div>
+      <div class="sub"><span class="coin-dot"></span><span id="coin">0</span></div>
     </div>
     <div class="hud-right">
       <div class="best">最高 <b id="best">0</b></div>
-      <button id="mute" class="hw-btn" type="button" aria-label="音效开关">🔊</button>
-    </div>
-  </div>
-  <div id="buffs" class="buffs"></div>
-  <div id="hint" class="hint hidden"></div>
-
-  <!-- ============ 开始界面 ============ -->
-  <div id="menu" class="screen menu">
-    <div class="menu-top">
-      <div class="logo-wrap">
-        <h1 class="logo">胖虎快跑</h1>
-        <div class="logo-glow"></div>
-      </div>
-      <p class="tagline">夜市小吃街 · 三条跑道 · 一车小电驴</p>
-      <div class="quick-tips">
-        <span class="qt">← → 换道</span>
-        <span class="qt">↑ 跳</span>
-        <span class="qt">↓ 滚</span>
-        <span class="qt">🛵 加速</span>
-      </div>
-    </div>
-
-    <div class="menu-bottom">
-      <button id="playBtn" class="play-btn" type="button">
-        <span class="play-label">开始奔跑</span>
-        <span class="play-sub">点击 / 按 Enter</span>
-      </button>
-      <div class="menu-row">
-        <button id="boardBtn" class="mini-btn" type="button">排行榜</button>
-        <button id="settingsBtn" class="mini-btn" type="button">设置</button>
-        <button id="helpBtn" class="mini-btn" type="button">玩法</button>
-      </div>
-      <div class="loadbar"><i id="loadFill"></i></div>
-      <div class="load-text" id="loadText">加载中…</div>
+      <button id="mute" class="mute" type="button" aria-label="音效开关">🔊</button>
     </div>
   </div>
 
-  <!-- ============ 首次引导 ============ -->
-  <div id="tutorial" class="tutorial hidden">
-    <div class="tut-card">
-      <h3>先记住三件事</h3>
-      <ul>
-        <li><b>左右滑</b> 切换跑道</li>
-        <li><b>上滑跳</b> 上木箱和台阶，<b>下滑滚</b> 过广告牌</li>
-        <li><b>骑上小电驴</b> 一路加速，撞了会掉下来</li>
-      </ul>
-      <p class="tut-sub">摊子上的小吃可以吃，效果不一样。</p>
-      <button id="tutOk" class="mini-btn wide" type="button">知道了，开跑</button>
+  <div id="powerups" class="powerups"></div>
+
+  <div id="start" class="screen">
+    <div class="card">
+      <div class="avatar-wrap"><img id="startFace" class="face" alt=""></div>
+      <h1 id="title">胖虎快跑</h1>
+      <p class="who"><b id="startName">胖虎</b> 正从学校一路狂奔回家…</p>
+      <div id="charRow" class="char-row"></div>
+      <button id="playBtn" class="btn" type="button">开始跑</button>
+      <button id="boardBtn" class="btn ghost" type="button">在线排行榜</button>
+      <p class="tips">左右滑动换道 · 上滑跳跃 · 下滑翻滚</p>
     </div>
   </div>
 
-  <!-- ============ 设置 ============ -->
-  <div id="settings" class="screen hidden">
-    <div class="panel">
-      <h2>设置</h2>
-      <label class="set-row">
-        <span>音效</span>
-        <input type="checkbox" id="setSfx" checked>
-      </label>
-      <label class="set-row">
-        <span>震动反馈</span>
-        <input type="checkbox" id="setVib" checked>
-      </label>
-      <label class="set-row">
-        <span>画质</span>
-        <select id="setQuality">
-          <option value="high">高</option>
-          <option value="mid">中</option>
-          <option value="low">低（省电）</option>
-        </select>
-      </label>
-      <button id="settingsClose" class="mini-btn wide" type="button">完成</button>
-    </div>
-  </div>
-
-  <!-- ============ 玩法说明 ============ -->
-  <div id="help" class="screen hidden">
-    <div class="panel">
-      <h2>怎么玩</h2>
-      <ul class="help-list">
-        <li><b>左右滑 / ← →</b>：换跑道</li>
-        <li><b>上滑 / ↑ / 点击</b>：跳过路障、上平台</li>
-        <li><b>下滑 / ↓</b>：翻滚钻过广告牌</li>
-        <li><b>小电驴</b>：骑上后速度暴增，撞到东西会摔车（不会直接结束）</li>
-        <li><b>小吃</b>：香妃卷加护盾、鸡肉卷加速、烤冷面回一格血</li>
-        <li><b>血条</b>：撞障碍掉一格，掉完就结束</li>
-      </ul>
-      <button id="helpClose" class="mini-btn wide" type="button">明白了</button>
-    </div>
-  </div>
-
-  <!-- ============ 结算 ============ -->
   <div id="over" class="screen hidden">
     <div class="card">
       <div class="avatar-wrap"><img id="overFace" class="face" alt=""></div>
-      <h2>摔了一跤</h2>
-      <p class="who"><b id="overName">胖虎</b> 今天跑了</p>
+      <h2>被逮住了</h2>
+      <p class="who"><b id="overName">胖虎</b> 撞上了</p>
       <div class="stats">
         <div><b id="finalScore">0</b><span>分</span></div>
-        <div><b id="finalFood">0</b><span>份小吃</span></div>
+        <div><b id="finalCoin">0</b><span>币</span></div>
       </div>
       <p class="bestline">最高 <b id="overBest">0</b></p>
       <div class="submit-row">
         <input id="nameInput" class="name-input" maxlength="8" placeholder="你的名字" autocomplete="off">
-        <button id="submitBtn" class="mini-btn" type="button">上传成绩</button>
+        <button id="submitBtn" class="btn small" type="button">上传成绩</button>
       </div>
-      <p class="hint-line" id="submitHint"></p>
-      <button id="retryBtn" class="play-btn small" type="button"><span class="play-label">再来一局</span></button>
+      <p class="hint" id="submitHint"></p>
+      <button id="retryBtn" class="btn" type="button">再来一局</button>
     </div>
   </div>
 
-  <!-- ============ 排行榜 ============ -->
   <div id="board" class="screen hidden">
     <div class="card">
-      <h2>夜市长跑榜</h2>
+      <h2>在线排行榜</h2>
       <p class="who">近 12 小时 · 每人取最高分</p>
       <ol id="boardList" class="board-list"><li class="empty">加载中…</li></ol>
       <div class="row">
-        <button id="boardRefresh" class="mini-btn" type="button">刷新</button>
-        <button id="boardClose" class="mini-btn" type="button">返回</button>
+        <button id="boardRefresh" class="btn ghost small" type="button">刷新</button>
+        <button id="boardClose" class="btn small" type="button">返回</button>
       </div>
     </div>
   </div>
@@ -153,8 +77,6 @@
       <p class="who">点一下继续跑</p>
     </div>
   </div>
-
-  <div id="fade" class="fade"></div>
 </div>
 <script src="app.js"></script>
 </body>
